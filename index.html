@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather App</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      min-height: 100vh;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -18,44 +18,51 @@
       color: #fff;
     }
 
-    h1 {
-      font-size: 1.8rem;
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2rem;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      margin-bottom: 28px;
-      opacity: 0.95;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      margin-top: 4px;
     }
 
     .search-bar {
       display: flex;
+      gap: 8px;
       width: 100%;
       max-width: 480px;
-      gap: 8px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     .search-bar input {
       flex: 1;
       padding: 12px 16px;
-      border: none;
+      border: 2px solid rgba(255,255,255,0.15);
       border-radius: 12px;
-      font-size: 1rem;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255,255,255,0.08);
       color: #fff;
+      font-size: 1rem;
       outline: none;
-      backdrop-filter: blur(8px);
-      transition: background 0.2s;
+      transition: border-color 0.2s;
     }
 
-    .search-bar input::placeholder { color: rgba(255,255,255,0.5); }
-
-    .search-bar input:focus { background: rgba(255, 255, 255, 0.2); }
+    .search-bar input::placeholder { color: rgba(255,255,255,0.4); }
+    .search-bar input:focus { border-color: rgba(255,255,255,0.4); }
 
     .search-bar button {
       padding: 12px 20px;
+      background: #e94560;
       border: none;
       border-radius: 12px;
-      background: #e94560;
       color: #fff;
       font-size: 1rem;
       font-weight: 600;
@@ -70,21 +77,22 @@
     .unit-toggle {
       display: flex;
       gap: 0;
+      background: rgba(255,255,255,0.08);
       border-radius: 10px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.2);
       margin-bottom: 28px;
     }
 
     .unit-toggle button {
       padding: 8px 20px;
+      background: transparent;
       border: none;
-      background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.5);
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
+      border-radius: 10px;
     }
 
     .unit-toggle button.active {
@@ -92,320 +100,291 @@
       color: #fff;
     }
 
-    .card {
-      width: 100%;
-      max-width: 480px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
-      padding: 32px 28px;
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    .error-msg {
+      color: #ff6b7a;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      text-align: center;
       display: none;
     }
 
-    .card.visible { display: block; }
+    .loader {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .weather-card {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 480px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
 
     .city-name {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 700;
-      margin-bottom: 4px;
     }
 
-    .condition-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 20px 0;
-    }
-
-    .weather-emoji {
-      font-size: 4rem;
-      line-height: 1;
-    }
-
-    .temp-main {
-      font-size: 4rem;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .condition-label {
-      font-size: 1.1rem;
-      opacity: 0.8;
+    .weather-condition {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
       margin-top: 4px;
     }
 
-    .divider {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      margin: 20px 0;
+    .weather-emoji {
+      font-size: 3.5rem;
+      line-height: 1;
+    }
+
+    .temperature {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 28px;
+    }
+
+    .temperature sup {
+      font-size: 1.8rem;
+      font-weight: 600;
+      vertical-align: super;
+      letter-spacing: 0;
     }
 
     .stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
     }
 
-    .stat {
+    .stat-item {
       background: rgba(255,255,255,0.05);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 14px 16px;
     }
 
     .stat-label {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      opacity: 0.55;
-      margin-bottom: 4px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 6px;
     }
 
     .stat-value {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 700;
     }
 
-    .error-msg {
-      width: 100%;
-      max-width: 480px;
-      background: rgba(233, 69, 96, 0.2);
-      border: 1px solid rgba(233, 69, 96, 0.5);
-      border-radius: 12px;
-      padding: 14px 18px;
-      color: #ffa0b0;
-      font-size: 0.95rem;
-      display: none;
-    }
-
-    .error-msg.visible { display: block; }
-
-    .loading {
-      width: 100%;
-      max-width: 480px;
-      text-align: center;
-      padding: 20px;
-      opacity: 0.6;
-      display: none;
-    }
-
-    .loading.visible { display: block; }
-
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid rgba(255,255,255,0.15);
-      border-top-color: #e94560;
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     @media (max-width: 375px) {
-      h1 { font-size: 1.4rem; }
-      .temp-main, .weather-emoji { font-size: 3rem; }
-      .card { padding: 22px 16px; }
+      header h1 { font-size: 1.6rem; }
+      .temperature { font-size: 3.2rem; }
+      .weather-emoji { font-size: 2.8rem; }
     }
   </style>
 </head>
 <body>
 
-  <h1>Weather App</h1>
+  <header>
+    <h1>Weather App</h1>
+    <p>Get real-time weather for any city</p>
+  </header>
 
   <div class="search-bar">
-    <input id="cityInput" type="text" placeholder="Enter a city name…" autocomplete="off" />
-    <button id="searchBtn">Search</button>
+    <input type="text" id="cityInput" placeholder="Search city…" autocomplete="off">
+    <button id="searchBtn" onclick="handleSearch()">Search</button>
   </div>
 
   <div class="unit-toggle">
-    <button id="btnC" class="active" data-unit="C">°C</button>
-    <button id="btnF" data-unit="F">°F</button>
+    <button id="btnC" class="active" onclick="setUnit('C')">°C</button>
+    <button id="btnF" onclick="setUnit('F')">°F</button>
   </div>
 
-  <div class="loading" id="loading"><div class="spinner"></div></div>
   <div class="error-msg" id="errorMsg"></div>
+  <div class="loader" id="loader"></div>
 
-  <div class="card" id="weatherCard">
-    <div class="city-name" id="cityLabel"></div>
-    <div class="condition-row">
-      <div class="weather-emoji" id="weatherEmoji"></div>
+  <div class="weather-card" id="weatherCard">
+    <div class="card-top">
       <div>
-        <div class="temp-main" id="tempMain"></div>
-        <div class="condition-label" id="conditionLabel"></div>
+        <div class="city-name" id="cityName"></div>
+        <div class="weather-condition" id="weatherCondition"></div>
       </div>
+      <div class="weather-emoji" id="weatherEmoji"></div>
     </div>
-    <hr class="divider" />
+    <div class="temperature">
+      <span id="tempValue"></span><sup id="tempUnit">°C</sup>
+    </div>
     <div class="stats">
-      <div class="stat">
+      <div class="stat-item">
         <div class="stat-label">Humidity</div>
-        <div class="stat-value" id="humidity"></div>
+        <div class="stat-value" id="humidity">—</div>
       </div>
-      <div class="stat">
+      <div class="stat-item">
         <div class="stat-label">Wind Speed</div>
-        <div class="stat-value" id="windSpeed"></div>
+        <div class="stat-value" id="windSpeed">—</div>
       </div>
     </div>
   </div>
 
   <script>
-    const WMO = {
-      0:  { label: 'Clear Sky',           emoji: '☀️'  },
-      1:  { label: 'Mainly Clear',        emoji: '🌤️' },
-      2:  { label: 'Partly Cloudy',       emoji: '⛅'  },
-      3:  { label: 'Overcast',            emoji: '☁️'  },
-      45: { label: 'Foggy',               emoji: '🌫️' },
-      48: { label: 'Icy Fog',             emoji: '🌫️' },
-      51: { label: 'Light Drizzle',       emoji: '🌦️' },
-      53: { label: 'Drizzle',             emoji: '🌦️' },
-      55: { label: 'Heavy Drizzle',       emoji: '🌧️' },
-      61: { label: 'Light Rain',          emoji: '🌧️' },
-      63: { label: 'Rain',                emoji: '🌧️' },
-      65: { label: 'Heavy Rain',          emoji: '🌧️' },
-      71: { label: 'Light Snow',          emoji: '🌨️' },
-      73: { label: 'Snow',                emoji: '❄️'  },
-      75: { label: 'Heavy Snow',          emoji: '❄️'  },
-      77: { label: 'Snow Grains',         emoji: '🌨️' },
-      80: { label: 'Light Showers',       emoji: '🌦️' },
-      81: { label: 'Showers',             emoji: '🌧️' },
-      82: { label: 'Heavy Showers',       emoji: '🌧️' },
-      85: { label: 'Snow Showers',        emoji: '🌨️' },
-      86: { label: 'Heavy Snow Showers',  emoji: '❄️'  },
-      95: { label: 'Thunderstorm',        emoji: '⛈️'  },
-      96: { label: 'Thunderstorm + Hail', emoji: '⛈️'  },
-      99: { label: 'Thunderstorm + Hail', emoji: '⛈️'  },
+    const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+    const WEATHER_URL   = 'https://api.open-meteo.com/v1/forecast';
+
+    let currentTempC = null;
+    let currentUnit  = 'C';
+
+    const WMO_EMOJI = {
+      0:  '☀️',
+      1:  '🌤️',
+      2:  '⛅',
+      3:  '☁️',
+      45: '🌫️', 48: '🌫️',
+      51: '🌦️', 53: '🌦️', 55: '🌧️',
+      56: '🌧️', 57: '🌧️',
+      61: '🌧️', 63: '🌧️', 65: '🌧️',
+      66: '🌧️', 67: '🌧️',
+      71: '🌨️', 73: '🌨️', 75: '🌨️', 77: '🌨️',
+      80: '🌦️', 81: '🌧️', 82: '🌧️',
+      85: '🌨️', 86: '🌨️',
+      95: '⛈️', 96: '⛈️', 99: '⛈️',
     };
 
-    function getWMO(code) {
-      return WMO[code] || { label: 'Unknown', emoji: '🌡️' };
+    const WMO_DESC = {
+      0:  'Clear Sky',
+      1:  'Mainly Clear',
+      2:  'Partly Cloudy',
+      3:  'Overcast',
+      45: 'Foggy', 48: 'Icy Fog',
+      51: 'Light Drizzle', 53: 'Moderate Drizzle', 55: 'Dense Drizzle',
+      56: 'Light Freezing Drizzle', 57: 'Heavy Freezing Drizzle',
+      61: 'Slight Rain', 63: 'Moderate Rain', 65: 'Heavy Rain',
+      66: 'Light Freezing Rain', 67: 'Heavy Freezing Rain',
+      71: 'Slight Snowfall', 73: 'Moderate Snowfall', 75: 'Heavy Snowfall',
+      77: 'Snow Grains',
+      80: 'Slight Rain Showers', 81: 'Moderate Rain Showers', 82: 'Heavy Rain Showers',
+      85: 'Slight Snow Showers', 86: 'Heavy Snow Showers',
+      95: 'Thunderstorm', 96: 'Thunderstorm + Hail', 99: 'Thunderstorm + Heavy Hail',
+    };
+
+    function cToF(c) { return +(c * 9 / 5 + 32).toFixed(1); }
+
+    function setUnit(unit) {
+      currentUnit = unit;
+      document.getElementById('btnC').classList.toggle('active', unit === 'C');
+      document.getElementById('btnF').classList.toggle('active', unit === 'F');
+      if (currentTempC !== null) renderTemperature();
     }
 
-    function cToF(c) { return (c * 9 / 5 + 32).toFixed(1); }
-
-    let state = {
-      unit: 'C',
-      tempC: null,
-      cityName: '',
-      weatherCode: null,
-      humidity: null,
-      windSpeed: null,
-    };
-
-    const cityInput   = document.getElementById('cityInput');
-    const searchBtn   = document.getElementById('searchBtn');
-    const btnC        = document.getElementById('btnC');
-    const btnF        = document.getElementById('btnF');
-    const weatherCard = document.getElementById('weatherCard');
-    const loading     = document.getElementById('loading');
-    const errorMsg    = document.getElementById('errorMsg');
+    function renderTemperature() {
+      const val = currentUnit === 'C' ? currentTempC : cToF(currentTempC);
+      document.getElementById('tempValue').textContent = val;
+      document.getElementById('tempUnit').textContent  = '°' + currentUnit;
+    }
 
     function showError(msg) {
-      errorMsg.textContent = msg;
-      errorMsg.classList.add('visible');
-      weatherCard.classList.remove('visible');
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
     }
 
     function hideError() {
-      errorMsg.classList.remove('visible');
+      document.getElementById('errorMsg').style.display = 'none';
     }
 
-    function showLoading(on) {
-      loading.classList.toggle('visible', on);
+    function showLoader() {
+      document.getElementById('loader').style.display = 'block';
+      document.getElementById('weatherCard').style.display = 'none';
     }
 
-    function renderCard() {
-      if (state.tempC === null) return;
-      const { label, emoji } = getWMO(state.weatherCode);
-      const temp = state.unit === 'C'
-        ? `${state.tempC}°C`
-        : `${cToF(state.tempC)}°F`;
-
-      document.getElementById('cityLabel').textContent   = state.cityName;
-      document.getElementById('weatherEmoji').textContent = emoji;
-      document.getElementById('tempMain').textContent    = temp;
-      document.getElementById('conditionLabel').textContent = label;
-      document.getElementById('humidity').textContent    = `${state.humidity}%`;
-      document.getElementById('windSpeed').textContent   = `${state.windSpeed} km/h`;
-
-      weatherCard.classList.add('visible');
+    function hideLoader() {
+      document.getElementById('loader').style.display = 'none';
     }
 
-    async function fetchWeather(city) {
+    async function handleSearch() {
+      const raw = document.getElementById('cityInput').value.trim();
+      if (!raw) return;
+      await searchCity(raw);
+    }
+
+    async function searchCity(cityQuery) {
+      showLoader();
       hideError();
-      showLoading(true);
-      weatherCard.classList.remove('visible');
 
       try {
-        const geoRes = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
-        );
-        if (!geoRes.ok) throw new Error('Geocoding request failed.');
+        const geoRes  = await fetch(`${GEOCODING_URL}?name=${encodeURIComponent(cityQuery)}&count=1&language=en&format=json`);
+        if (!geoRes.ok) throw new Error('Geocoding request failed');
         const geoData = await geoRes.json();
 
         if (!geoData.results || geoData.results.length === 0) {
-          throw new Error(`City "${city}" not found. Please try another name.`);
+          showError('City not found. Try a different name.');
+          return;
         }
 
         const { latitude, longitude, name, country } = geoData.results[0];
-
-        const wxRes = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-          `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code` +
-          `&wind_speed_unit=kmh&timezone=auto`
-        );
-        if (!wxRes.ok) throw new Error('Weather request failed.');
-        const wxData = await wxRes.json();
-
-        const cur = wxData.current;
-        state.tempC       = parseFloat(cur.temperature_2m);
-        state.weatherCode = cur.weather_code;
-        state.humidity    = cur.relative_humidity_2m;
-        state.windSpeed   = cur.wind_speed_10m;
-        state.cityName    = country ? `${name}, ${country}` : name;
-
-        localStorage.setItem('lastCity', city);
-        renderCard();
+        await fetchWeather(latitude, longitude, country ? `${name}, ${country}` : name);
+        localStorage.setItem('lastCity', cityQuery);
       } catch (err) {
-        showError(err.message || 'Something went wrong. Please try again.');
+        showError('Something went wrong. Check your connection and try again.');
       } finally {
-        showLoading(false);
+        hideLoader();
       }
     }
 
-    searchBtn.addEventListener('click', () => {
-      const city = cityInput.value.trim();
-      if (city) fetchWeather(city);
-    });
+    async function fetchWeather(lat, lon, displayName) {
+      const url = `${WEATHER_URL}?latitude=${lat}&longitude=${lon}` +
+                  `&current=temperature_2m,relative_humidity_2m,weathercode,windspeed_10m` +
+                  `&windspeed_unit=kmh`;
+      const res  = await fetch(url);
+      if (!res.ok) throw new Error('Weather request failed');
+      const data = await res.json();
+      const c    = data.current;
 
-    cityInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const city = cityInput.value.trim();
-        if (city) fetchWeather(city);
-      }
-    });
+      currentTempC = c.temperature_2m;
+      const code   = c.weathercode;
 
-    btnC.addEventListener('click', () => {
-      state.unit = 'C';
-      btnC.classList.add('active');
-      btnF.classList.remove('active');
-      renderCard();
-    });
+      document.getElementById('cityName').textContent        = displayName;
+      document.getElementById('weatherCondition').textContent = WMO_DESC[code] ?? 'Unknown';
+      document.getElementById('weatherEmoji').textContent    = WMO_EMOJI[code] ?? '🌡️';
+      document.getElementById('humidity').textContent        = c.relative_humidity_2m + '%';
+      document.getElementById('windSpeed').textContent       = c.windspeed_10m + ' km/h';
 
-    btnF.addEventListener('click', () => {
-      state.unit = 'F';
-      btnF.classList.add('active');
-      btnC.classList.remove('active');
-      renderCard();
-    });
-
-    // Restore last searched city on load
-    const lastCity = localStorage.getItem('lastCity');
-    if (lastCity) {
-      cityInput.value = lastCity;
-      fetchWeather(lastCity);
+      renderTemperature();
+      document.getElementById('weatherCard').style.display = 'block';
     }
+
+    document.getElementById('cityInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') handleSearch();
+    });
+
+    (function init() {
+      const last = localStorage.getItem('lastCity');
+      if (last) {
+        document.getElementById('cityInput').value = last;
+        searchCity(last);
+      }
+    })();
   </script>
 </body>
 </html>
