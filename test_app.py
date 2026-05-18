@@ -1,252 +1,312 @@
 import re
+import pytest
 from pathlib import Path
 
-HTML = Path("index.html").read_text(encoding="utf-8")
+HTML_FILE = Path(__file__).parent / "index.html"
 
+@pytest.fixture(scope="module")
+def html():
+    return HTML_FILE.read_text(encoding="utf-8")
 
-# --- Structure tests ---
 
-def test_html_has_doctype():
-    assert HTML.strip().lower().startswith("<!doctype html>")
+# ---------------------------------------------------------------------------
+# File / basic structure
+# ---------------------------------------------------------------------------
 
+def test_file_exists():
+    assert HTML_FILE.exists(), "index.html not found"
 
-def test_page_title():
-    assert re.search(r"<title>\s*Weather App\s*</title>", HTML, re.IGNORECASE)
+def test_doctype(html):
+    assert html.strip().startswith("<!DOCTYPE html>")
 
+def test_html_lang_en(html):
+    assert re.search(r'<html[^>]+lang=["\']en["\']', html)
 
-def test_h1_heading():
-    assert re.search(r"<h1[^>]*>\s*Weather App\s*</h1>", HTML, re.IGNORECASE)
+def test_charset_utf8(html):
+    assert re.search(r'<meta[^>]+charset=["\']?UTF-8["\']?', html, re.IGNORECASE)
 
+def test_viewport_meta(html):
+    assert re.search(r'<meta[^>]+name=["\']viewport["\']', html)
 
-def test_city_input_present():
-    assert re.search(r'id=["\']cityInput["\']', HTML)
+def test_title_weather_app(html):
+    assert re.search(r'<title>\s*Weather App\s*</title>', html)
 
 
-def test_search_button_present():
-    assert re.search(r'id=["\']searchBtn["\']', HTML)
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
 
+def test_header_exists(html):
+    assert '<header>' in html
 
-def test_unit_toggle_buttons_present():
-    assert re.search(r'id=["\']btnC["\']', HTML)
-    assert re.search(r'id=["\']btnF["\']', HTML)
+def test_h1_text(html):
+    assert re.search(r'<h1>\s*Weather\s*</h1>', html)
 
+def test_header_subtitle(html):
+    assert re.search(r'<p>\s*Live conditions for any city\s*</p>', html)
 
-def test_celsius_button_active_by_default():
-    match = re.search(r'id=["\']btnC["\'][^>]*class=["\'][^"\']*active', HTML)
-    if not match:
-        match = re.search(r'class=["\'][^"\']*active[^"\']*["\'][^>]*id=["\']btnC["\']', HTML)
-    assert match, "btnC should have 'active' class by default"
 
+# ---------------------------------------------------------------------------
+# Search bar
+# ---------------------------------------------------------------------------
 
-def test_weather_card_present():
-    assert re.search(r'id=["\']weatherCard["\']', HTML)
+def test_search_bar_div(html):
+    assert re.search(r'<div[^>]+class=["\']search-bar["\']', html)
 
+def test_city_input_exists(html):
+    assert re.search(r'<input[^>]+id=["\']cityInput["\']', html)
 
-def test_weather_card_hidden_by_default():
-    card_match = re.search(r'<div[^>]+id=["\']weatherCard["\'][^>]*>', HTML)
-    assert card_match
-    tag = card_match.group(0)
-    # card element should not have 'visible' class in markup
-    assert "visible" not in tag
+def test_city_input_type_text(html):
+    assert re.search(r'<input[^>]+type=["\']text["\']', html)
 
+def test_city_input_placeholder(html):
+    assert re.search(r'placeholder=["\']Enter city name', html)
 
-def test_loading_element_present():
-    assert re.search(r'id=["\']loading["\']', HTML)
+def test_city_input_autocomplete_off(html):
+    assert re.search(r'<input[^>]+id=["\']cityInput["\'][^>]*autocomplete=["\']off["\']'
+                     r'|autocomplete=["\']off["\'][^>]*id=["\']cityInput["\']', html)
 
+def test_search_button_exists(html):
+    assert re.search(r'<button[^>]+id=["\']searchBtn["\']', html)
 
-def test_error_msg_element_present():
-    assert re.search(r'id=["\']errorMsg["\']', HTML)
+def test_search_button_text(html):
+    assert re.search(r'id=["\']searchBtn["\'][^>]*>\s*Search\s*</button>'
+                     r'|<button[^>]*id=["\']searchBtn["\'][^>]*>\s*Search', html)
 
 
-def test_weather_emoji_element():
-    assert re.search(r'id=["\']weatherEmoji["\']', HTML)
+# ---------------------------------------------------------------------------
+# Error message & spinner
+# ---------------------------------------------------------------------------
 
+def test_error_msg_element(html):
+    assert re.search(r'id=["\']errorMsg["\']', html)
 
-def test_temp_main_element():
-    assert re.search(r'id=["\']tempMain["\']', HTML)
+def test_error_msg_class(html):
+    assert re.search(r'class=["\']error-msg["\']', html)
 
+def test_spinner_element(html):
+    assert re.search(r'id=["\']spinner["\']', html)
 
-def test_condition_label_element():
-    assert re.search(r'id=["\']conditionLabel["\']', HTML)
+def test_spinner_class(html):
+    assert re.search(r'class=["\']spinner["\']', html)
 
 
-def test_city_label_element():
-    assert re.search(r'id=["\']cityLabel["\']', HTML)
+# ---------------------------------------------------------------------------
+# Weather card
+# ---------------------------------------------------------------------------
 
+def test_card_element(html):
+    assert re.search(r'<div[^>]+class=["\']card["\'][^>]*id=["\']card["\']'
+                     r'|<div[^>]+id=["\']card["\'][^>]*class=["\']card["\']', html)
 
-def test_humidity_element():
-    assert re.search(r'id=["\']humidity["\']', HTML)
+def test_card_top_div(html):
+    assert re.search(r'class=["\']card-top["\']', html)
 
+def test_city_name_element(html):
+    assert re.search(r'id=["\']cityName["\']', html)
 
-def test_wind_speed_element():
-    assert re.search(r'id=["\']windSpeed["\']', HTML)
+def test_country_name_element(html):
+    assert re.search(r'id=["\']countryName["\']', html)
 
+def test_weather_icon_element(html):
+    assert re.search(r'id=["\']weatherIcon["\']', html)
 
-def test_spinner_element():
-    assert re.search(r'class=["\']spinner["\']', HTML)
+def test_condition_element(html):
+    assert re.search(r'id=["\']condition["\']', html)
 
+def test_temperature_row(html):
+    assert re.search(r'class=["\']temperature-row["\']', html)
 
-# --- CSS tests ---
+def test_temperature_element(html):
+    assert re.search(r'id=["\']temperature["\']', html)
 
-def test_card_hidden_by_default_css():
-    # .card should have display:none
-    card_rule = re.search(r'\.card\s*\{[^}]+\}', HTML, re.DOTALL)
-    assert card_rule
-    assert "display: none" in card_rule.group(0) or "display:none" in card_rule.group(0)
+def test_unit_toggle_button(html):
+    assert re.search(r'id=["\']unitToggle["\']', html)
 
+def test_unit_toggle_aria_label(html):
+    assert re.search(r'aria-label=["\']Toggle temperature unit["\']', html)
 
-def test_card_visible_css():
-    assert re.search(r'\.card\.visible\s*\{[^}]*display\s*:\s*block', HTML, re.DOTALL)
+def test_celsius_btn(html):
+    assert re.search(r'id=["\']celsiusBtn["\']', html)
 
+def test_celsius_btn_active_by_default(html):
+    assert re.search(r'id=["\']celsiusBtn["\'][^>]*class=["\'][^"\']*active[^"\']*["\']'
+                     r'|class=["\'][^"\']*active[^"\']*["\'][^>]*id=["\']celsiusBtn["\']', html)
 
-def test_error_msg_hidden_by_default_css():
-    err_rule = re.search(r'\.error-msg\s*\{[^}]+\}', HTML, re.DOTALL)
-    assert err_rule
-    assert "display: none" in err_rule.group(0) or "display:none" in err_rule.group(0)
+def test_fahrenheit_btn(html):
+    assert re.search(r'id=["\']fahrenheitBtn["\']', html)
 
+def test_celsius_label(html):
+    assert '°C' in html
 
-def test_error_msg_visible_css():
-    assert re.search(r'\.error-msg\.visible\s*\{[^}]*display\s*:\s*block', HTML, re.DOTALL)
+def test_fahrenheit_label(html):
+    assert '°F' in html
 
 
-def test_loading_hidden_by_default_css():
-    loading_rule = re.search(r'\.loading\s*\{[^}]+\}', HTML, re.DOTALL)
-    assert loading_rule
-    assert "display: none" in loading_rule.group(0) or "display:none" in loading_rule.group(0)
+# ---------------------------------------------------------------------------
+# Details section
+# ---------------------------------------------------------------------------
 
+def test_details_div(html):
+    assert re.search(r'class=["\']details["\']', html)
 
-def test_spin_keyframes_defined():
-    assert re.search(r'@keyframes\s+spin', HTML)
+def test_humidity_label(html):
+    assert re.search(r'Humidity', html)
 
+def test_humidity_element(html):
+    assert re.search(r'id=["\']humidity["\']', html)
 
-def test_active_button_style():
-    assert re.search(r'\.unit-toggle\s+button\.active\s*\{[^}]*background\s*:', HTML, re.DOTALL)
+def test_wind_speed_label(html):
+    assert re.search(r'Wind Speed', html)
 
+def test_wind_speed_element(html):
+    assert re.search(r'id=["\']windSpeed["\']', html)
 
-# --- JavaScript logic tests ---
+def test_detail_items_count(html):
+    items = re.findall(r'class=["\']detail-item["\']', html)
+    assert len(items) == 2
 
-def test_wmo_codes_defined():
-    assert "const WMO" in HTML or "var WMO" in HTML or "let WMO" in HTML
 
+# ---------------------------------------------------------------------------
+# CSS: variables and key rules
+# ---------------------------------------------------------------------------
 
-def test_wmo_clear_sky_entry():
-    assert "'Clear Sky'" in HTML or '"Clear Sky"' in HTML
+def test_css_variable_bg(html):
+    assert '--bg:' in html or '--bg :' in html
 
+def test_css_variable_accent(html):
+    assert '--accent:' in html
 
-def test_wmo_thunderstorm_entry():
-    assert "'Thunderstorm'" in HTML or '"Thunderstorm"' in HTML
+def test_css_variable_radius(html):
+    assert '--radius:' in html
 
+def test_card_hidden_by_default(html):
+    # .card { display: none } before .card.visible overrides it
+    assert re.search(r'\.card\s*\{[^}]*display\s*:\s*none', html, re.DOTALL)
 
-def test_ctof_conversion_function():
-    assert re.search(r'function\s+cToF', HTML)
+def test_card_visible_class(html):
+    assert re.search(r'\.card\.visible\s*\{[^}]*display\s*:\s*block', html, re.DOTALL)
 
+def test_error_msg_hidden_by_default(html):
+    assert re.search(r'\.error-msg\s*\{[^}]*display\s*:\s*none', html, re.DOTALL)
 
-def test_ctof_formula_correct():
-    # formula: c * 9 / 5 + 32
-    assert re.search(r'c\s*\*\s*9\s*/\s*5\s*\+\s*32', HTML)
+def test_error_msg_visible_class(html):
+    assert re.search(r'\.error-msg\.visible\s*\{[^}]*display\s*:\s*block', html, re.DOTALL)
 
+def test_spinner_hidden_by_default(html):
+    assert re.search(r'\.spinner\s*\{[^}]*display\s*:\s*none', html, re.DOTALL)
 
-def test_get_wmo_function():
-    assert re.search(r'function\s+getWMO', HTML)
+def test_spinner_visible_class(html):
+    assert re.search(r'\.spinner\.visible\s*\{[^}]*display\s*:\s*block', html, re.DOTALL)
 
+def test_spin_keyframe(html):
+    assert re.search(r'@keyframes\s+spin', html)
 
-def test_get_wmo_fallback():
-    # unknown codes should return a fallback
-    assert re.search(r"label\s*:\s*['\"]Unknown['\"]", HTML)
+def test_responsive_media_query(html):
+    assert re.search(r'@media\s*\([^)]*max-width\s*:\s*400px\s*\)', html)
 
 
-def test_state_object_defined():
-    assert re.search(r"let\s+state\s*=\s*\{", HTML)
+# ---------------------------------------------------------------------------
+# JavaScript: logic and constants
+# ---------------------------------------------------------------------------
 
+def test_storage_key_constant(html):
+    assert "STORAGE_KEY" in html
+    assert re.search(r"STORAGE_KEY\s*=\s*['\"]weather_last_city['\"]", html)
 
-def test_state_has_unit():
-    assert re.search(r"unit\s*:\s*['\"]C['\"]", HTML)
+def test_wmo_codes_object(html):
+    assert "WMO_CODES" in html
 
+def test_wmo_code_clear_sky(html):
+    assert re.search(r"0\s*:\s*\{[^}]*Clear Sky", html)
 
-def test_render_card_function():
-    assert re.search(r'function\s+renderCard', HTML)
+def test_wmo_code_thunderstorm(html):
+    assert re.search(r"95\s*:\s*\{[^}]*Thunderstorm", html)
 
+def test_wmo_codes_coverage(html):
+    # At least 20 WMO code entries
+    entries = re.findall(r'\d+\s*:\s*\{[^}]*label', html)
+    assert len(entries) >= 20
 
-def test_fetch_weather_function():
-    assert re.search(r'(async\s+function\s+fetchWeather|fetchWeather\s*=\s*async)', HTML)
+def test_to_fahrenheit_formula(html):
+    # toF must implement c * 9 / 5 + 32
+    assert re.search(r'c\s*\*\s*9\s*/\s*5\s*\+\s*32', html)
 
+def test_render_temperature_function(html):
+    assert 'renderTemperature' in html
 
-def test_geocoding_api_url():
-    assert "geocoding-api.open-meteo.com/v1/search" in HTML
+def test_geocode_function(html):
+    assert 'async function geocode' in html
 
+def test_fetch_weather_function(html):
+    assert 'async function fetchWeather' in html
 
-def test_weather_api_url():
-    assert "api.open-meteo.com/v1/forecast" in HTML
+def test_display_weather_function(html):
+    assert 'function displayWeather' in html
 
+def test_search_function(html):
+    assert 'async function search' in html
 
-def test_encode_uri_city():
-    assert "encodeURIComponent" in HTML
+def test_geocoding_api_url(html):
+    assert 'geocoding-api.open-meteo.com' in html
 
+def test_weather_api_url(html):
+    assert 'api.open-meteo.com/v1/forecast' in html
 
-def test_city_not_found_error_message():
-    assert "not found" in HTML
+def test_geocode_uses_encode_uri(html):
+    assert 'encodeURIComponent' in html
 
+def test_weather_api_params(html):
+    assert 'temperature_2m' in html
+    assert 'relative_humidity_2m' in html
+    assert 'wind_speed_10m' in html
+    assert 'weather_code' in html
 
-def test_local_storage_save():
-    assert "localStorage.setItem" in HTML
-    assert "'lastCity'" in HTML or '"lastCity"' in HTML
+def test_local_storage_set(html):
+    assert re.search(r'localStorage\.setItem\s*\(\s*STORAGE_KEY', html)
 
+def test_local_storage_get(html):
+    assert re.search(r'localStorage\.getItem\s*\(\s*STORAGE_KEY', html)
 
-def test_local_storage_restore():
-    assert "localStorage.getItem" in HTML
+def test_search_btn_click_listener(html):
+    assert re.search(r"['\"]click['\"]", html)
 
+def test_enter_key_listener(html):
+    assert re.search(r"['\"]keydown['\"]", html)
+    assert re.search(r"['\"]Enter['\"]", html)
 
-def test_search_button_click_listener():
-    assert re.search(r"searchBtn\.addEventListener\s*\(\s*['\"]click['\"]", HTML)
+def test_unit_toggle_click_listener(html):
+    assert re.search(r'unitToggle.*addEventListener|addEventListener.*unitToggle', html, re.DOTALL)
 
+def test_unit_toggle_logic(html):
+    # Toggling flips between 'C' and 'F'
+    assert re.search(r"unit\s*===\s*['\"]C['\"].*['\"]F['\"]|['\"]F['\"].*unit\s*===\s*['\"]C['\"]",
+                     html, re.DOTALL)
 
-def test_enter_key_listener():
-    assert re.search(r"['\"]keydown['\"]", HTML)
-    assert re.search(r"['\"]Enter['\"]", HTML)
+def test_set_loading_disables_button(html):
+    assert re.search(r'searchBtn.*disabled|disabled.*searchBtn', html, re.DOTALL)
 
+def test_error_shown_on_failure(html):
+    assert 'showError' in html
+    assert re.search(r'catch\s*\(', html)
 
-def test_unit_toggle_c_listener():
-    assert re.search(r"btnC\.addEventListener\s*\(\s*['\"]click['\"]", HTML)
+def test_clear_error_called_on_search(html):
+    assert 'clearError' in html
 
+def test_loading_finally_block(html):
+    assert 'finally' in html
+    assert re.search(r'finally\s*\{[^}]*setLoading\s*\(\s*false\s*\)', html, re.DOTALL)
 
-def test_unit_toggle_f_listener():
-    assert re.search(r"btnF\.addEventListener\s*\(\s*['\"]click['\"]", HTML)
+def test_state_object(html):
+    assert re.search(r'let\s+state\s*=\s*\{', html)
+    assert re.search(r'tempC\s*:\s*null', html)
+    assert re.search(r"unit\s*:\s*['\"]C['\"]", html)
 
+def test_last_city_auto_search(html):
+    # On load, if lastCity exists in localStorage, it is searched automatically
+    assert re.search(r'if\s*\(\s*lastCity\s*\)', html)
+    assert re.search(r'search\s*\(\s*lastCity\s*\)', html)
 
-def test_celsius_display_format():
-    # temperature rendered as e.g. "25°C"
-    assert "°C`" in HTML or "°C'" in HTML or '°C"' in HTML or "°C}" in HTML
-
-
-def test_fahrenheit_display_format():
-    assert "°F`" in HTML or "°F'" in HTML or '°F"' in HTML or "°F}" in HTML
-
-
-def test_humidity_percent_display():
-    assert '${state.humidity}%' in HTML or "{state.humidity}%" in HTML
-
-
-def test_wind_speed_kmh_display():
-    assert "km/h" in HTML
-
-
-# --- Accessibility / meta tests ---
-
-def test_charset_utf8():
-    assert re.search(r'charset=["\']UTF-8["\']', HTML, re.IGNORECASE)
-
-
-def test_viewport_meta():
-    assert re.search(r'name=["\']viewport["\']', HTML, re.IGNORECASE)
-
-
-def test_lang_attribute():
-    assert re.search(r'<html[^>]+lang=["\']en["\']', HTML, re.IGNORECASE)
-
-
-def test_input_autocomplete_off():
-    assert re.search(r'autocomplete=["\']off["\']', HTML, re.IGNORECASE)
-
-
-def test_responsive_media_query():
-    assert re.search(r'@media\s*\(max-width\s*:\s*375px\)', HTML)
+def test_city_input_value_restored(html):
+    assert re.search(r"cityInput.*\.value\s*=\s*lastCity|value\s*=\s*lastCity.*cityInput",
+                     html, re.DOTALL)
