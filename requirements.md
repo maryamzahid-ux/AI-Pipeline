@@ -24,3 +24,4 @@ A single-page web application that lets a user check current weather conditions 
 - Last searched city is restored from localStorage on load
 - No console errors on load or interaction
 - Page is usable on a mobile screen (375px wide)
+- Display a 5-day forecast section showing daily high and low temperatures
