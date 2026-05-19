@@ -70,7 +70,6 @@
     }
 
     .search-bar input::placeholder { color: var(--muted); }
-
     .search-bar input:focus { border-color: var(--accent); }
 
     .search-bar button {
@@ -228,11 +227,79 @@
       font-weight: 700;
     }
 
+    /* 5-day forecast */
+    .forecast-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-top: 16px;
+      padding: 20px 24px;
+      width: 100%;
+      max-width: 480px;
+      display: none;
+    }
+
+    .forecast-card.visible { display: block; }
+
+    .forecast-heading {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .forecast-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .forecast-row {
+      align-items: center;
+      background: var(--surface2);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 16px;
+    }
+
+    .forecast-day {
+      font-size: 0.9rem;
+      font-weight: 600;
+      min-width: 90px;
+    }
+
+    .forecast-icon {
+      font-size: 1.4rem;
+      user-select: none;
+    }
+
+    .forecast-temps {
+      display: flex;
+      gap: 12px;
+      font-size: 0.9rem;
+    }
+
+    .forecast-high {
+      font-weight: 700;
+      min-width: 44px;
+      text-align: right;
+    }
+
+    .forecast-low {
+      color: var(--muted);
+      min-width: 44px;
+      text-align: right;
+    }
+
     @media (max-width: 400px) {
       .temperature { font-size: 2.8rem; }
       .weather-icon { font-size: 2.8rem; }
       .city-name { font-size: 1.25rem; }
-      .card { padding: 20px 16px; }
+      .card, .forecast-card { padding: 20px 16px; }
+      .forecast-day { min-width: 72px; }
     }
   </style>
 </head>
@@ -287,46 +354,57 @@
     </div>
   </div>
 
+  <div class="forecast-card" id="forecastCard">
+    <div class="forecast-heading">5-Day Forecast</div>
+    <div class="forecast-list" id="forecastList"></div>
+  </div>
+
   <script>
     'use strict';
 
     const STORAGE_KEY = 'weather_last_city';
 
     const WMO_CODES = {
-      0:  { label: 'Clear Sky',                    emoji: '☀️' },
-      1:  { label: 'Mainly Clear',                 emoji: '🌤️' },
-      2:  { label: 'Partly Cloudy',                emoji: '⛅' },
-      3:  { label: 'Overcast',                     emoji: '☁️' },
-      45: { label: 'Foggy',                        emoji: '🌫️' },
-      48: { label: 'Icy Fog',                      emoji: '🌫️' },
-      51: { label: 'Light Drizzle',                emoji: '🌦️' },
-      53: { label: 'Drizzle',                      emoji: '🌦️' },
-      55: { label: 'Heavy Drizzle',                emoji: '🌧️' },
-      56: { label: 'Freezing Drizzle',             emoji: '🌧️' },
-      57: { label: 'Heavy Freezing Drizzle',       emoji: '🌧️' },
-      61: { label: 'Light Rain',                   emoji: '🌧️' },
-      63: { label: 'Rain',                         emoji: '🌧️' },
-      65: { label: 'Heavy Rain',                   emoji: '🌧️' },
-      66: { label: 'Freezing Rain',                emoji: '🌨️' },
-      67: { label: 'Heavy Freezing Rain',          emoji: '🌨️' },
-      71: { label: 'Light Snow',                   emoji: '🌨️' },
-      73: { label: 'Snow',                         emoji: '❄️' },
-      75: { label: 'Heavy Snow',                   emoji: '❄️' },
-      77: { label: 'Snow Grains',                  emoji: '🌨️' },
-      80: { label: 'Light Showers',                emoji: '🌦️' },
-      81: { label: 'Showers',                      emoji: '🌧️' },
-      82: { label: 'Heavy Showers',                emoji: '⛈️' },
-      85: { label: 'Snow Showers',                 emoji: '🌨️' },
-      86: { label: 'Heavy Snow Showers',           emoji: '❄️' },
-      95: { label: 'Thunderstorm',                 emoji: '⛈️' },
-      96: { label: 'Thunderstorm w/ Hail',         emoji: '⛈️' },
-      99: { label: 'Thunderstorm w/ Heavy Hail',   emoji: '⛈️' },
+      0:  { label: 'Clear Sky',                   emoji: '☀️'  },
+      1:  { label: 'Mainly Clear',                emoji: '🌤️' },
+      2:  { label: 'Partly Cloudy',               emoji: '⛅'  },
+      3:  { label: 'Overcast',                    emoji: '☁️'  },
+      45: { label: 'Foggy',                       emoji: '🌫️' },
+      48: { label: 'Icy Fog',                     emoji: '🌫️' },
+      51: { label: 'Light Drizzle',               emoji: '🌦️' },
+      53: { label: 'Drizzle',                     emoji: '🌦️' },
+      55: { label: 'Heavy Drizzle',               emoji: '🌧️' },
+      56: { label: 'Freezing Drizzle',            emoji: '🌧️' },
+      57: { label: 'Heavy Freezing Drizzle',      emoji: '🌧️' },
+      61: { label: 'Light Rain',                  emoji: '🌧️' },
+      63: { label: 'Rain',                        emoji: '🌧️' },
+      65: { label: 'Heavy Rain',                  emoji: '🌧️' },
+      66: { label: 'Freezing Rain',               emoji: '🌨️' },
+      67: { label: 'Heavy Freezing Rain',         emoji: '🌨️' },
+      71: { label: 'Light Snow',                  emoji: '🌨️' },
+      73: { label: 'Snow',                        emoji: '❄️'  },
+      75: { label: 'Heavy Snow',                  emoji: '❄️'  },
+      77: { label: 'Snow Grains',                 emoji: '🌨️' },
+      80: { label: 'Light Showers',               emoji: '🌦️' },
+      81: { label: 'Showers',                     emoji: '🌧️' },
+      82: { label: 'Heavy Showers',               emoji: '⛈️'  },
+      85: { label: 'Snow Showers',                emoji: '🌨️' },
+      86: { label: 'Heavy Snow Showers',          emoji: '❄️'  },
+      95: { label: 'Thunderstorm',                emoji: '⛈️'  },
+      96: { label: 'Thunderstorm w/ Hail',        emoji: '⛈️'  },
+      99: { label: 'Thunderstorm w/ Heavy Hail',  emoji: '⛈️'  },
     };
 
+    const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
     const state = {
-      tempC:    null,
-      windKmh:  null,
-      unit:     'C',
+      tempC:      null,
+      windKmh:    null,
+      unit:       'C',
+      dailyMaxC:  [],
+      dailyMinC:  [],
+      dailyCodes: [],
+      dailyDates: [],
     };
 
     const $ = id => document.getElementById(id);
@@ -344,27 +422,61 @@
 
     function clearError() {
       $('errorMsg').classList.remove('visible');
-      $('errorMsg').textContent = '';
+    }
+
+    function cToF(c) {
+      return Math.round(c * 9 / 5 + 32);
+    }
+
+    function formatTemp(c) {
+      return state.unit === 'C' ? Math.round(c) + '°C' : cToF(c) + '°F';
+    }
+
+    function formatWind(kmh) {
+      return state.unit === 'C'
+        ? Math.round(kmh) + ' km/h'
+        : Math.round(kmh * 0.621371) + ' mph';
+    }
+
+    function dayLabel(dateStr, index) {
+      if (index === 0) return 'Today';
+      if (index === 1) return 'Tomorrow';
+      const d = new Date(dateStr + 'T12:00:00');
+      return DAY_NAMES[d.getDay()];
     }
 
     function renderUnits() {
       if (state.tempC === null) return;
 
-      const isCelsius = state.unit === 'C';
+      $('temperature').textContent = formatTemp(state.tempC);
+      $('windSpeed').textContent   = formatWind(state.windKmh);
 
-      const temp = isCelsius
-        ? Math.round(state.tempC) + '°C'
-        : Math.round(state.tempC * 9 / 5 + 32) + '°F';
+      $('celsiusBtn').classList.toggle('active', state.unit === 'C');
+      $('fahrenheitBtn').classList.toggle('active', state.unit === 'F');
 
-      const wind = isCelsius
-        ? Math.round(state.windKmh) + ' km/h'
-        : Math.round(state.windKmh * 0.621371) + ' mph';
+      const rows = $('forecastList').querySelectorAll('.forecast-row');
+      rows.forEach((row, i) => {
+        row.querySelector('.forecast-high').textContent = formatTemp(state.dailyMaxC[i]);
+        row.querySelector('.forecast-low').textContent  = formatTemp(state.dailyMinC[i]);
+      });
+    }
 
-      $('temperature').textContent = temp;
-      $('windSpeed').textContent   = wind;
-
-      $('celsiusBtn').classList.toggle('active', isCelsius);
-      $('fahrenheitBtn').classList.toggle('active', !isCelsius);
+    function buildForecast() {
+      const list = $('forecastList');
+      list.innerHTML = '';
+      state.dailyDates.forEach((date, i) => {
+        const wmo  = WMO_CODES[state.dailyCodes[i]] || { emoji: '🌡️', label: '' };
+        const row  = document.createElement('div');
+        row.className = 'forecast-row';
+        row.innerHTML = `
+          <span class="forecast-day">${dayLabel(date, i)}</span>
+          <span class="forecast-icon">${wmo.emoji}</span>
+          <span class="forecast-temps">
+            <span class="forecast-high"></span>
+            <span class="forecast-low"></span>
+          </span>`;
+        list.appendChild(row);
+      });
     }
 
     async function geocode(city) {
@@ -383,20 +495,26 @@
         latitude:        lat,
         longitude:       lon,
         current:         'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
+        daily:           'temperature_2m_max,temperature_2m_min,weather_code',
         wind_speed_unit: 'kmh',
         timezone:        'auto',
+        forecast_days:   5,
       });
       const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
       if (!res.ok) throw new Error('Weather request failed.');
       return res.json();
     }
 
-    function displayWeather(geo, weather) {
-      const cur = weather.current;
+    function displayWeather(geo, data) {
+      const cur = data.current;
       const wmo = WMO_CODES[cur.weather_code] || { label: 'Unknown', emoji: '🌡️' };
 
-      state.tempC   = cur.temperature_2m;
-      state.windKmh = cur.wind_speed_10m;
+      state.tempC      = cur.temperature_2m;
+      state.windKmh    = cur.wind_speed_10m;
+      state.dailyMaxC  = data.daily.temperature_2m_max;
+      state.dailyMinC  = data.daily.temperature_2m_min;
+      state.dailyCodes = data.daily.weather_code;
+      state.dailyDates = data.daily.time;
 
       $('cityName').textContent    = geo.name;
       $('countryName').textContent = [geo.admin1, geo.country].filter(Boolean).join(', ');
@@ -404,8 +522,11 @@
       $('condition').textContent   = wmo.label;
       $('humidity').textContent    = cur.relative_humidity_2m + '%';
 
+      buildForecast();
       renderUnits();
+
       $('card').classList.add('visible');
+      $('forecastCard').classList.add('visible');
     }
 
     async function search(city) {
@@ -414,6 +535,7 @@
 
       clearError();
       $('card').classList.remove('visible');
+      $('forecastCard').classList.remove('visible');
       setLoading(true);
 
       try {
@@ -439,7 +561,6 @@
       renderUnits();
     });
 
-    // Restore last searched city
     try {
       const last = localStorage.getItem(STORAGE_KEY);
       if (last) {
